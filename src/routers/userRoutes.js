@@ -18,6 +18,19 @@ router.post("/users", async (req, res) => {
     }
 })
 
+//user login
+router.post("/users/login" ,async (req,res)=>{
+
+    try {
+        const user =await User.findByCredentials(req.body.email,req.body.password)
+        //findByCredentials() is a method defined by us , which is a reusable function 
+        res.send(user)
+    } catch (error) {
+        res.status(400).send()
+       
+    }
+})
+
 
 // reading resources at users endpoint
 router.get('/users', async (req, res) => {
@@ -70,14 +83,21 @@ router.patch("/users/:id", async (req, res) => {
        return res.status(400).send({ error: "Invalid update !!" })
     }
 
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
     try {
+        // const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+        //to make use of mongoose middleware , I made this change 
+        const updateUser=await User.findById(req.params.id)
+        updates.forEach((update)=>{
+            updateUser[update]=req.body[update]
+        })
+        await updateUser.save()
+
         //if user is not found
-        if (!updatedUser) {
+        if (!updateUser) {
             res.status(404).send()
         }
         //all well ,nothing wrong happened
-        res.send(updatedUser)
+        res.send(updateUser)
     } catch (error) {
         // case-1:error due to validation 
         res.status(400).send(error)
