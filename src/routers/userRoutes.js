@@ -1,5 +1,6 @@
 const express = require("express")
 const User = require("../models/user")
+const auth =require("../middleware/auth")
 const router = new express.Router()
 
 
@@ -38,12 +39,12 @@ router.post("/users/login" ,async (req,res)=>{
 })
 
 
-// reading resources at users endpoint
-router.get('/users', async (req, res) => {
+// for currently authenticated user , user this route to get your own profile info
+router.get('/users/me', auth ,async (req, res) => {
 
     try {
-        const data =await User.find({})
-        res.status(201).send(data)
+        const myProfileData=req.user
+        res.send(myProfileData)
     } catch (error) {
         res.status(500).send({
             reason: "internal server error",

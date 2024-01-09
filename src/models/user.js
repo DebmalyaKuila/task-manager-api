@@ -4,6 +4,7 @@ const validator = require("validator")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 
+
 //making a schema manually to use middleware
 const userSchema = new mongoose.Schema(
     {
