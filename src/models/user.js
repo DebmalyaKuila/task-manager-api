@@ -2,6 +2,7 @@
 const mongoose = require("mongoose")
 const validator = require("validator")
 const bcrypt = require("bcryptjs")
+const jwt = require("jsonwebtoken")
 
 //making a schema manually to use middleware
 const userSchema = new mongoose.Schema(
@@ -40,9 +41,26 @@ const userSchema = new mongoose.Schema(
                     throw new Error(`your password can't contain "password" string`)
                 }
             }
-        }
+        },
+        tokens:[{
+            token:{
+                type:String,
+                required:true
+            }
+        }]
     }
 )
+
+//instance method
+userSchema.methods.generateAuthToken = async function(){
+        const user=this
+        const token = jwt.sign({_id:user._id.toString()},'mySignature@Debmalya123',{expiresIn:"4 weeks"})
+        //saving token to the user database ,in case user want to logout later
+        user.tokens=user.tokens.concat({token : token})
+        await user.save()
+        return token
+}
+//model method
 //now, User model will have access to findByCredentials() method
 userSchema.statics.findByCredentials = async (email,password)=>{
         const user= await User.findOne({email:email})

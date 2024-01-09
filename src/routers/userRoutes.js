@@ -4,27 +4,33 @@ const router = new express.Router()
 
 
 
-// create resource on users endpoint
+// create resource on users endpoint (user signup)
 router.post("/users", async (req, res) => {
 
     // req.body ->contains the object which client provides ,now it will go through validation and saved in mongoose database
     
     try {
-        const newUser = new User(req.body)
+        const newUser =await new User(req.body)
         await newUser.save();
-        res.status(201).send(newUser);
+        const token =await newUser.generateAuthToken();
+        res.status(201).send({user : newUser , token :token});
     } catch (error) {
         res.status(400).send(error);
     }
 })
 
 //user login
+//when user try to log in
 router.post("/users/login" ,async (req,res)=>{
-
+    
     try {
+        //1.we find the user by given credentials
         const user =await User.findByCredentials(req.body.email,req.body.password)
         //findByCredentials() is a method defined by us , which is a reusable function 
-        res.send(user)
+        //2.we generate a token for the user who's trying to login and saving it to te database
+        const token = await user.generateAuthToken()
+        //get the generated token from a reusable function generateAuthToken(), which I created
+        res.send({user ,token })
     } catch (error) {
         res.status(400).send()
        
