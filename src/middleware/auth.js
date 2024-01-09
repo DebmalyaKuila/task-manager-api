@@ -14,6 +14,8 @@ try {
     //1.route handler runs
     //2.give the route handler acces to the user info that we fetched fron database to save resouses of the server
     req.user=user
+    //for logging out, I need the token
+    req.token=token
     next()
     
 } catch (error) {

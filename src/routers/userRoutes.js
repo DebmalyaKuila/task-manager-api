@@ -38,6 +38,34 @@ router.post("/users/login" ,async (req,res)=>{
     }
 })
 
+//user logout
+//when user want to logout from current device
+router.post('/users/logout',auth,async (req,res)=>{
+    try {
+        const sessionToken =req.token
+        const user=req.user
+        user.tokens=user.tokens.filter((token)=>{
+                if (token.token !== sessionToken) {
+                    return true
+                }
+        })  
+        await user.save()      
+        res.send()
+    } catch (error) {
+        res.status(500).send()
+    }
+})
+//when user want to logout from all devices
+router.post('/users/logoutAll',auth,async (req,res)=>{
+    try {
+        const user=req.user
+        user.tokens=[]
+        await user.save()      
+        res.send()
+    } catch (error) {
+        res.status(500).send()
+    }
+})
 
 // for currently authenticated user , user this route to get your own profile info
 router.get('/users/me', auth ,async (req, res) => {
