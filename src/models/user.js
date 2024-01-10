@@ -61,6 +61,18 @@ userSchema.methods.generateAuthToken = async function(){
         await user.save()
         return token
 }
+userSchema.methods.toJSON = function(){
+    //get the mongoose document using this keyword
+    const user = this
+    //convert the mongoose document to an object by using toObject() method of mongoose
+    const userObject=user.toObject()
+    //delete password , tokens, version from user object to hide private data of user
+    delete userObject.password
+    delete userObject.tokens
+    delete userObject.__v
+
+    return userObject
+}
 //model method
 //now, User model will have access to findByCredentials() method
 userSchema.statics.findByCredentials = async (email,password)=>{
