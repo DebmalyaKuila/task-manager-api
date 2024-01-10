@@ -105,12 +105,6 @@ router.patch("/users/me",auth, async (req, res) => {
             updateUser[update] = req.body[update]
         })
         await updateUser.save()
-
-        //if user is not found
-        if (!updateUser) {
-            res.status(404).send()
-        }
-        //all well ,nothing wrong happened
         res.send(updateUser)
     } catch (error) {
         // case-1:error due to validation 
