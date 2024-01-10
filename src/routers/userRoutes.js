@@ -1,6 +1,6 @@
 const express = require("express")
 const User = require("../models/user")
-const auth =require("../middleware/auth")
+const auth = require("../middleware/auth")
 const router = new express.Router()
 
 
@@ -9,12 +9,12 @@ const router = new express.Router()
 router.post("/users", async (req, res) => {
 
     // req.body ->contains the object which client provides ,now it will go through validation and saved in mongoose database
-    
+
     try {
-        const newUser =await new User(req.body)
+        const newUser = await new User(req.body)
         await newUser.save();
-        const token =await newUser.generateAuthToken();
-        res.status(201).send({user : newUser , token :token});
+        const token = await newUser.generateAuthToken();
+        res.status(201).send({ user: newUser, token: token });
     } catch (error) {
         res.status(400).send(error);
     }
@@ -22,45 +22,45 @@ router.post("/users", async (req, res) => {
 
 //user login
 //when user try to log in
-router.post("/users/login" ,async (req,res)=>{
-    
+router.post("/users/login", async (req, res) => {
+
     try {
         //1.we find the user by given credentials
-        const user =await User.findByCredentials(req.body.email,req.body.password)
+        const user = await User.findByCredentials(req.body.email, req.body.password)
         //findByCredentials() is a method defined by us , which is a reusable function 
         //2.we generate a token for the user who's trying to login and saving it to te database
         const token = await user.generateAuthToken()
         //get the generated token from a reusable function generateAuthToken(), which I created
-        res.send({user ,token })
+        res.send({ user, token })
     } catch (error) {
         res.status(400).send()
-       
+
     }
 })
 
 //user logout
 //when user want to logout from current device
-router.post('/users/logout',auth,async (req,res)=>{
+router.post('/users/logout', auth, async (req, res) => {
     try {
-        const sessionToken =req.token
-        const user=req.user
-        user.tokens=user.tokens.filter((token)=>{
-                if (token.token !== sessionToken) {
-                    return true
-                }
-        })  
-        await user.save()      
+        const sessionToken = req.token
+        const user = req.user
+        user.tokens = user.tokens.filter((token) => {
+            if (token.token !== sessionToken) {
+                return true
+            }
+        })
+        await user.save()
         res.send()
     } catch (error) {
         res.status(500).send()
     }
 })
 //when user want to logout from all devices
-router.post('/users/logoutAll',auth,async (req,res)=>{
+router.post('/users/logoutAll', auth, async (req, res) => {
     try {
-        const user=req.user
-        user.tokens=[]
-        await user.save()      
+        const user = req.user
+        user.tokens = []
+        await user.save()
         res.send()
     } catch (error) {
         res.status(500).send()
@@ -68,10 +68,10 @@ router.post('/users/logoutAll',auth,async (req,res)=>{
 })
 
 // for currently authenticated user , user this route to get your own profile info
-router.get('/users/me', auth ,async (req, res) => {
+router.get('/users/me', auth, async (req, res) => {
 
     try {
-        const myProfileData=req.user
+        const myProfileData = req.user
         res.send(myProfileData)
     } catch (error) {
         res.status(500).send({
@@ -81,32 +81,11 @@ router.get('/users/me', auth ,async (req, res) => {
     }
 
 })
-// reading single resources at users endpoint, fetch individual user by id
-router.get("/users/:id", async (req, res) => {
-    try {
-        const user_id = req.params.id
-        const data = await User.findById(user_id);
-        if (!data) {
-            res.status(404).send()
-        }
-        res.send(data)
-    } catch (error) {
-        res.status(500).send({
-            reason: "internal server error",
-            message: "our services are currently down",
-            error: error
-        })
-    }
 
 
 
-})
-
-
-
-
-//updating a user 
-router.patch("/users/:id", async (req, res) => {
+//updating my own profile
+router.patch("/users/me",auth, async (req, res) => {
 
     const updates = Object.keys(req.body)
     const updateOperations = ["name", "age", "email", "password"]
@@ -115,15 +94,15 @@ router.patch("/users/:id", async (req, res) => {
     })
     //if some invalid update is being performed or some values in database which are not changable
     if (!isValidOperation) {
-       return res.status(400).send({ error: "Invalid update !!" })
+        return res.status(400).send({ error: "Invalid update !!" })
     }
 
     try {
         // const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
         //to make use of mongoose middleware , I made this change 
-        const updateUser=await User.findById(req.params.id)
-        updates.forEach((update)=>{
-            updateUser[update]=req.body[update]
+        const updateUser = req.user
+        updates.forEach((update) => {
+            updateUser[update] = req.body[update]
         })
         await updateUser.save()
 
@@ -140,16 +119,12 @@ router.patch("/users/:id", async (req, res) => {
     }
 })
 
-
-//delete a user 
-router.delete("/users/:userId", async (req, res) => {
-    const deletedUser = await User.findByIdAndDelete(req.params.userId)
-
+//delete my own profile
+router.delete("/users/me", auth,async (req, res) => {
     try {
-        if (!deletedUser) {
-            res.status(404).send({ error: `no such user exists !! ` })
-        }
-        res.send(deletedUser)
+        const user=req.user
+        await User.findByIdAndDelete(user._id)
+        res.send(user)
     } catch (error) {
         res.status(500).send({
             reason: "internal server error",
