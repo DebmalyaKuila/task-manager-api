@@ -52,6 +52,14 @@ const userSchema = new mongoose.Schema(
     }
 )
 
+//virtual property of user model 'tasksOfUser' to establish relation with tasks from user
+userSchema.virtual('tasksOfUser',{
+    ref:'Tasks',
+    localField:"_id",
+    foreignField:'owner'
+})
+
+
 //instance method
 userSchema.methods.generateAuthToken = async function(){
         const user=this
@@ -101,9 +109,6 @@ userSchema.statics.findByCredentials = async (email,password)=>{
 userSchema.pre('save', async function (next) {
     //this -> gives access to individual user that's about to be saved
     const user = this
-
-  console.log('just before saving data')
-
     //if password is modified , we will override the value with new new hased password and even when we create a user for first time mongoose will consider password modified . so, both scenarios are covered
     if (user.isModified('password')) {
         user.password = await bcrypt.hash(user.password, 8)
