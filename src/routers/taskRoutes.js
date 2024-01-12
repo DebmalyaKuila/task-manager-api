@@ -4,14 +4,14 @@ const auth = require("../middleware/auth")
 const router = new express.Router()
 
 // create resource on tasks endpoint
-router.post("/tasks",auth, async (req, res) => {
+router.post("/tasks", auth, async (req, res) => {
     const newTask = new Task({
         ...req.body,
-        owner:req.user._id
+        owner: req.user._id
     })
 
     try {
-        const data=await newTask.save();
+        const data = await newTask.save();
         res.status(201).send(data);
     } catch (error) {
         res.status(400).send(error);
@@ -22,61 +22,71 @@ router.post("/tasks",auth, async (req, res) => {
 
 
 
-// reading resources at tasks endpoint
-router.get("/tasks", async(req, res) => {
-    
+// reading all tasks of user
+router.get("/tasks", auth, async (req, res) => {
+
     try {
-        const data=Task.find({})
-        res.send(data)
+        const user=req.user
+        // const data=await Task.find({owner:user._id})
+        await user.populate('tasksOfUser')
+        res.send(user.tasksOfUser)
     } catch (error) {
         res.status(500).send({
             reason: "internal server error",
             message: "our services are currently down",
-            error: err
+            error: error
         })
     }
 
 })
-// reading single resources at tasks endpoint, fetch individual task by id
-router.get("/tasks/:id", async(req, res) => {
+
+// reading single resources at tasks endpoint by a user, fetch individual task by id 
+router.get("/tasks/:id", auth, async (req, res) => {
     const _id = req.params.id
 
     try {
-        const data=await Task.findById(_id)
+        const data = await Task.findOne({ _id: _id, owner: req.user._id })
         if (!data) {
-            res.status(404).send({error :"no such task found !!"})
+            return res.status(404).send()
         }
         res.send(data)
     } catch (error) {
         res.status(500).send({
             reason: "internal server error",
             message: "our services are currently down",
-            error: err
+            error: error
         })
     }
 })
 
-//updating a task 
-router.patch("/tasks/:id", async (req, res) => {
+//updating a task of a user
+router.patch("/tasks/:id",auth, async (req, res) => {
 
     const updates = Object.keys(req.body)
-    const updateOperations = ["description", "completed"]
+    //specifying allowed update operations
+    const allowedUpdateOperations = ["description", "completed"]
+    //determine whether the update operation is valid or not 
     const isValidOperation = updates.every((update) => {
-        return updateOperations.includes(update)
+        return allowedUpdateOperations.includes(update)
     })
     //if some invalid update is being performed or some values in database which are not changable
     if (!isValidOperation) {
         return res.status(400).send({ error: "Invalid update !!" })
     }
-
-    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+    const _id =req.params.id
     try {
-        //if user is not found
-        if (!updatedTask) {
-            res.status(404).send()
+        // const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+        const task = await Task.findOne({_id , owner:req.user._id})
+        //if user's task is not found
+        if (!task) {
+            return res.status(404).send()
         }
+        updates.forEach(update => {
+            task[update]=req.body[update]
+        });
+        await task.save()
         //all well ,nothing wrong happened
-        res.send(updatedTask)
+        res.send(task)
     } catch (error) {
         // case-1:error due to validation 
         res.status(400).send(error)
@@ -84,15 +94,15 @@ router.patch("/tasks/:id", async (req, res) => {
     }
 })
 
-//delete a task
-router.delete("/tasks/:id", async (req, res) => {
-    const deletedTask = await Task.findByIdAndDelete(req.params.id)
+//delete a task created by a specific user 
+router.delete("/tasks/:id",auth, async (req, res) => {
+    const task = await Task.findOneAndDelete({_id:req.params.id,owner:req.user._id})
 
     try {
-        if (!deletedTask) {
-            res.status(404).send({ error: `no such task exists !! ` })
+        if (!task) {
+            return res.status(404).send()
         }
-        res.send(deletedTask)
+        res.send(task)
     } catch (error) {
         res.status(500).send({
             reason: "internal server error",

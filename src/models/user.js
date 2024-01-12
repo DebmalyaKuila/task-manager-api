@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const validator = require("validator")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+const Task = require("../models/task")
 
 
 //making a schema manually to use middleware

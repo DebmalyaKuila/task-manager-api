@@ -2,6 +2,7 @@ const express = require("express")
 const User = require("../models/user")
 const auth = require("../middleware/auth")
 const router = new express.Router()
+const Task =require('../models/task')
 
 
 
@@ -118,6 +119,8 @@ router.delete("/users/me", auth,async (req, res) => {
     try {
         const user=req.user
         await User.findByIdAndDelete(user._id)
+        //when user is deleted , tasks of user should also be deleted
+        await Task.deleteMany({owner:user._id})
         res.send(user)
     } catch (error) {
         res.status(500).send({
