@@ -22,13 +22,23 @@ router.post("/tasks", auth, async (req, res) => {
 
 
 
-// reading all tasks of user
+//GET /tasks--> reading all tasks of user
+//GET /tasks?completed=true --> reading completed tasks of user (filtering)
+//GET /tasks?completed=false --> reading not completed tasks of user (filtering)
 router.get("/tasks", auth, async (req, res) => {
-
+        const match ={}
+        if (req.query.completed) {
+            //req.query.completed returns true/false as string , not as boolean .That's why I converted it to boolean by using this way  and set completed key of match object as boolean
+           
+            match.completed = (req.query.completed === 'true')
+        }
     try {
         const user=req.user
         // const data=await Task.find({owner:user._id})
-        await user.populate('tasksOfUser')
+        await user.populate({
+            path :'tasksOfUser',
+            match : match
+        })
         res.send(user.tasksOfUser)
     } catch (error) {
         res.status(500).send({

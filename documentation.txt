@@ -12,15 +12,105 @@ inside src/index.js ->starting point of our application where we initialize expr
 
 
 
-##problems to fix:
-1.when i find a resource by id , if i use an invalid if ,there,s some issue-
-    i.if the length of id is less than or greaten than the actual mongodb object id size , i get a 500 beacause
-     mongoose findById promise  is falling to catch as it's trated as an error
-             "name": "CastError"
-        note-app is not crashing
-    ii.if I enter an invalid id of same length as pf original monbodb objectid ,I get a 404 which is fine ,
-    thats how I have set it up. BUT, when after firing that request from postman, the node app crashes with error
-            Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
-        note-app is crashed
-2.some issues during updating -
-    i.patch with invalid id , the whole app crashes
+##user endpoints :(Only accessed by authenticated users)
+
+1.GET : {{url}}/users/me  -->get the user data for my profile page of user
+        response --->{
+                        "_id": "65a25442d7a545915d0fc3e3",
+                        "name": "Debmalya Kuila",
+                        "age": 0,
+                        "email": "debmalyakuila911@gmail.com",
+                        "createdAt": "2024-01-13T09:13:38.940Z",
+                        "updatedAt": "2024-01-13T09:13:39.048Z"
+                    }
+
+2.DELETE : {{url}}/users/me  -->delete the user profile 
+            response ---> {
+                                "_id": "65a25442d7a545915d0fc3e3",
+                                "name": "Debmalya Kuila",
+                                "age": 0,
+                                "email": "debmalyakuila911@gmail.com",
+                                "createdAt": "2024-01-13T09:13:38.940Z",
+                                "updatedAt": "2024-01-13T09:13:39.048Z"
+                           }
+
+3.PATCH : {{url}}/users/me  -->update the user data
+            request  --->{
+                            "name":"soldier boy"
+                        }
+
+            response ---> {
+                        "_id": "65a25442d7a545915d0fc3e3",
+                        "name": "soldier Boy",
+                        "age": 0,
+                        "email": "debmalyakuila911@gmail.com",
+                        "createdAt": "2024-01-13T09:13:38.940Z",
+                        "updatedAt": "2024-01-13T09:13:39.048Z"
+                    }
+
+4.POST : 
+
+
+
+
+##tasks endpoints :(only access tasks of authorized users)
+
+1.GET : 
+    i. {{url}}/tasks  -->get all tasks created by user
+        response --->[
+                        {
+                            "_id": "65a2595cd7a545915d0fc3fd",
+                            "description": "become a crorepati !!",
+                            "completed": false,
+                            "owner": "65a25945d7a545915d0fc3f7",
+                            "createdAt": "2024-01-13T09:35:24.510Z",
+                            "updatedAt": "2024-01-13T09:35:24.510Z",
+                            "__v": 0
+                        },
+                        {
+                            "_id": "65a25977d7a545915d0fc401",
+                            "description": "become a SDE at Microsoft !!",
+                            "completed": false,
+                            "owner": "65a25945d7a545915d0fc3f7",
+                            "createdAt": "2024-01-13T09:35:51.328Z",
+                            "updatedAt": "2024-01-13T09:35:51.328Z",
+                            "__v": 0
+                        }
+                     ]
+
+    ii. {{url}}/tasks ?completed=true -->get all tasks created by user which are completed
+        response --->[
+                            {
+                                "_id": "65a25977d7a545915d0fd009",
+                                "description": "become a SDE at Oracle !!",
+                                "completed": true,
+                                "owner": "65a25945d7a545915d0fc3f7",
+                                "createdAt": "2024-01-13T09:35:51.328Z",
+                                "updatedAt": "2024-01-13T09:35:51.328Z",
+                                "__v": 0
+                            }
+                     ]
+
+    iii. {{url}}/tasks ?completed=false -->get all tasks created by user which are not completed
+          response ---> [
+                            {
+                                "_id": "65a2595cd7a545915d0fc3fd",
+                                "description": "become a crorepati !!",
+                                "completed": false,
+                                "owner": "65a25945d7a545915d0fc3f7",
+                                "createdAt": "2024-01-13T09:35:24.510Z",
+                                "updatedAt": "2024-01-13T09:35:24.510Z",
+                                "__v": 0
+                            },
+                            {
+                                "_id": "65a25977d7a545915d0fc401",
+                                "description": "become a SDE at Microsoft !!",
+                                "completed": false,
+                                "owner": "65a25945d7a545915d0fc3f7",
+                                "createdAt": "2024-01-13T09:35:51.328Z",
+                                "updatedAt": "2024-01-13T09:35:51.328Z",
+                                "__v": 0
+                            }
+                        ]
+
+2.POST : 
