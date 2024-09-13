@@ -6,12 +6,6 @@ const taskRouter = require("./routers/taskRoutes")
 const app = express()
 const port = process.env.PORT || 3000;
 
-//REMEMBER -express middleware has to be above all app.use() calls
-//setting up middleware for maintainace mode 
-// app.use((req,res,next)=>{
-//         res.status(503).send("under maintainace , try again after some time")
-// })
-
 
 // configuring express to automatically parse the incoming json for us so that we have it as an object which we can use 
 app.use(express.json())

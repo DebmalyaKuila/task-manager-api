@@ -3,6 +3,8 @@ const User = require("../models/user")
 const auth = require("../middleware/auth")
 const router = new express.Router()
 const Task =require('../models/task')
+const sharp= require("sharp")
+const multer=require("multer")
 
 
 
@@ -125,12 +127,77 @@ router.delete("/users/me", auth,async (req, res) => {
     } catch (error) {
         res.status(500).send({
             reason: "internal server error",
-            message: "our services are currently down",
-            error: error
+            message: "our services are currently down"
         })
     }
 })
 
+//configure multer to upload profile image
+const upload = multer({
+    limits : {
+        //only allow files of 5 MB 
+        fileSize : 5000000 // 5Mb in bytes
+    },
+    fileFilter(req , file , cb) {
+        //how to work with callback function cb?
+        //cb(undefined,true) -> upload the file
+        // cb(new Error("file must be PDF")) -> send back an error to the user who uploaded the file
+        //cb(undefined,false) -> silently reject the file (genereally not practically used)
 
+        //only allow png , img ,jpg ,jpeg files
+        if(!file.originalname.match(/\.(png|img|jpg|jpeg)$/)){
+            return cb(new Error("Please upload an image"))
+        }
+        cb(undefined,true)
+    }
+    
+})
+
+//upload profile picture of the user -> multer middleware will look for a file called "profilePic" in request and when multer finds it , file will be stored in the directory according to dest option in upload
+router.post("/users/me/avatar" , auth , upload.single("avatar") , async (req,res)=>{
+    try {
+        //normalize all uploaded files to pnf and also resize them using sharp and convert that back to binary buffer data
+        const buffer = await sharp(req.file.buffer).resize({width:250 , height:250}).png().toBuffer()
+        req.user.avatar=buffer
+        await req.user.save()
+        res.send()
+    } catch (error) {
+        res.status(500).send({
+            reason: "internal server error",
+            message: "our services are currently down"
+        })
+    }
+},(error,req,res,next)=>{
+    res.status(400).send({
+        error:error.message
+    })
+})
+
+
+//delete my profile picture
+router.delete("/users/me/avatar" , auth , async (req,res)=>{
+    try {
+        req.user.avatar=undefined
+        await req.user.save()
+        res.send()
+    } catch (error) {
+        res.status(500).send({
+            reason: "internal server error",
+            message: "our services are currently down"
+        })
+    }
+})
+
+//get my profile picture
+router.get("/users/me/avatar",auth , async(req,res)=>{
+    try {
+        const user=req.user
+        if(!user || !user.avatar)throw new Error()
+        res.set('Content-Type','image/png').send(user.avatar)
+    } catch (error) {
+        res.status(404).send()
+    }
+
+})
 
 module.exports = router
